@@ -1,0 +1,23 @@
+{
+  "name": "propdates-schema",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "register": "tsx register.ts",
+    "attest": "tsx attest.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "dan13ram",
+  "license": "ISC",
+  "packageManager": "pnpm@10.8.0",
+  "dependencies": {
+    "@ethereum-attestation-service/eas-contracts": "^1.8.0",
+    "@ethereum-attestation-service/eas-sdk": "^2.7.0",
+    "dotenv": "^16.4.7",
+    "ethers": "^6.13.5",
+    "tsx": "^4.19.3",
+    "viem": "^2.26.2"
+  }
+}
