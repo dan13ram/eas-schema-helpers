@@ -52,7 +52,8 @@ const run = async (chain: Chain) => {
 
   schemaRegistry.connect(wallet);
 
-  const schema = "bytes32 proposalId, bytes32 originalMessageId, uint8 messageType, string message";
+  //const schema = "bytes32 proposalId, bytes32 originalMessageId, uint8 messageType, string message";
+  const schema = "uint8 tokenType, address token, bool isCollection, uint256 tokenId";
   const resolverAddress = zeroAddress;
   const revocable = true;
 
@@ -67,7 +68,7 @@ const run = async (chain: Chain) => {
     const hash = await transaction.wait(2);
 
     console.log("Schema registered on chain " + chain.name);
-    console.log("Transaction hash:", hash);
+    console.log("Schema ID:", hash);
   } catch (error) {
     console.error("Error registering schema on chain " + chain.name);
     console.error(error);
@@ -75,7 +76,7 @@ const run = async (chain: Chain) => {
 }
 
 const main = async () => {
-  const chains = [base];
+  const chains = [base, optimism, arbitrum, mainnet];
   for (const chain of chains) {
     await run(chain);
   }
