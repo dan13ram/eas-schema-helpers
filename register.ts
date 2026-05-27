@@ -2,8 +2,7 @@ import { SchemaRegistry } from "@ethereum-attestation-service/eas-sdk";
 import { ethers } from "ethers";
 import dotenv from "dotenv";
 import { Chain, Hex, zeroAddress } from "viem";
-import { base, optimism, mainnet, arbitrum, sepolia } from "viem/chains";
-//import deployments from "@ethereum-attestation-service/eas-contracts/deployments";
+import { base, optimism, mainnet, arbitrum, sepolia, baseSepolia, optimismSepolia } from "viem/chains";
 
 dotenv.config();
 
@@ -24,6 +23,10 @@ const getChainLabel = (chain: Chain) => {
       return "base";
     case sepolia.id:
       return "sepolia";
+    case optimismSepolia.id:
+      return "optimism-sepolia";
+    case baseSepolia.id:
+      return "base-sepolia";
     default:
       throw new Error("Unknown chain ID: " + chain.id);
   }
@@ -37,12 +40,21 @@ const readSchemaRegistryContractAddress = async (chain: Chain): Promise<Hex> => 
   return address as Hex;
 };
 
-const run = async (chain: Chain) => {
+
+const proposalCandidateSchema = "bytes32 candidateId,bytes32 salt,uint64 versionNumber,address[] targets,uint256[] values,bytes[] calldatas,string description,bytes32 proposalId,uint64 createdAt"
+
+const candidateCommentSchema = "bytes32 candidateId,uint8 support,string comment,bytes32 parentCommentUID"
+
+const candidateSponsorSignatureSchema = "bytes32 candidateVersionUID,bytes32 proposalId,uint256 nonce,uint256 deadline,bytes signature"
+
+
+const run = async (chain: Chain, schema = proposalCandidateSchema) => {
   const rpc = chain.rpcUrls.default.http[0];
   if (!rpc) {
     throw new Error("RPC URL not found for " + chain.name);
   }
-  console.log("running on chain " + chain.name);
+  console.log("Running on chain:", chain.name);
+  console.log("Schema:", schema);
 
   const provider = new ethers.JsonRpcProvider(rpc);
   const wallet = ethers.Wallet.fromPhrase(mnemonic, provider);
@@ -53,7 +65,8 @@ const run = async (chain: Chain) => {
   schemaRegistry.connect(wallet);
 
   //const schema = "bytes32 proposalId, bytes32 originalMessageId, uint8 messageType, string message";
-  const schema = "uint8 tokenType, address token, bool isCollection, uint256 tokenId";
+  // const schema = "uint8 tokenType, address token, bool isCollection, uint256 tokenId";
+  //const schema = "address daoMultiSig";
   const resolverAddress = zeroAddress;
   const revocable = true;
 
@@ -75,10 +88,18 @@ const run = async (chain: Chain) => {
   }
 }
 
+
 const main = async () => {
-  const chains = [base, optimism, arbitrum, mainnet];
+  const chains = [sepolia];
+  const schemas = [
+    proposalCandidateSchema,
+    candidateCommentSchema,
+    candidateSponsorSignatureSchema,
+  ];
   for (const chain of chains) {
-    await run(chain);
+    for (const schema of schemas) {
+      await run(chain, schema);
+    }
   }
 }
 

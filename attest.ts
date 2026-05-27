@@ -139,8 +139,7 @@ const getSchemaData = (proposalId: Hex, messageType: number, message: string) =>
     return encodedData;
   }
   if (messageType === 3) {
-    const urlJsonMessage = "ipfs://bafkreie6d33ij6pyfh22evaozn5dhxk25kls5hy3dmnzj43sz2nust3mey";
-    //const urlJsonMessageWithMilestone = "ipfs://bafkreie2grbchrbpd6genmtnfvbwafsnuw2qsyem2ehf6fqylfnkgqfsum";
+    const urlJsonMessage = "ipfs://bafkreie2grbchrbpd6genmtnfvbwafsnuw2qsyem2ehf6fqylfnkgqfsum";
     const encodedData = schemaEncoder.encodeData([
       { name: "proposalId", value: proposalId, type: "bytes32" },
       { name: "originalMessageId", value: zeroHash, type: "bytes32" },
@@ -152,7 +151,7 @@ const getSchemaData = (proposalId: Hex, messageType: number, message: string) =>
   throw new Error("Invalid message type");
 };
 const run = async (chain: Chain) => {
-  const rpc = chain.rpcUrls.default.http[0];
+  const rpc = "https://1rpc.io/sepolia";
   if (!rpc) {
     throw new Error("RPC URL not found for " + chain.name);
   }
@@ -169,13 +168,10 @@ const run = async (chain: Chain) => {
   // Signer must be an ethers-like signer.
   eas.connect(wallet);
 
-  const messageType = 1;
-  const message = {
-    content: "This is type 1 message with milestone id",
-    milestoneId: 0
-  };
+  const messageType = 3;
+  const message = "This is type 0 message";
 
-  const encodedData = getSchemaData(proposalId, messageType, JSON.stringify(message));
+  const encodedData = getSchemaData(proposalId, messageType, message);
   try {
     const tx = await eas.attest({
       schema: schemaUID,
