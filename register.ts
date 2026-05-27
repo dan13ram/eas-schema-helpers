@@ -48,7 +48,13 @@ const candidateCommentSchema = "bytes32 candidateId,uint8 support,string comment
 const candidateSponsorSignatureSchema = "bytes32 candidateVersionUID,bytes32 proposalId,uint256 nonce,uint256 deadline,bytes signature"
 
 
-const run = async (chain: Chain, schema = proposalCandidateSchema) => {
+const run = async (chain: Chain, schema: string) => {
+  if (!chain || !chain.id) {
+    throw new Error("Chain not found");
+  }
+  if (!schema) {
+    throw new Error("Schema not found");
+  }
   const rpc = chain.rpcUrls.default.http[0];
   if (!rpc) {
     throw new Error("RPC URL not found for " + chain.name);
@@ -92,8 +98,8 @@ const run = async (chain: Chain, schema = proposalCandidateSchema) => {
 const main = async () => {
   const chains = [sepolia];
   const schemas = [
-    proposalCandidateSchema,
-    candidateCommentSchema,
+    // proposalCandidateSchema,
+    // candidateCommentSchema,
     candidateSponsorSignatureSchema,
   ];
   for (const chain of chains) {
