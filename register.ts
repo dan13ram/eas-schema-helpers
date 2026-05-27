@@ -41,11 +41,15 @@ const readSchemaRegistryContractAddress = async (chain: Chain): Promise<Hex> => 
 };
 
 
-const proposalCandidateSchema = "bytes32 candidateId,bytes32 salt,uint64 versionNumber,address[] targets,uint256[] values,bytes[] calldatas,string description,bytes32 proposalId,uint64 createdAt"
+const proposalCandidateSchema = "bytes32 candidateId,bytes32 salt,uint64 versionNumber,address[] targets,uint256[] values,bytes[] calldatas,string description,bytes32 proposalId"
 
 const candidateCommentSchema = "bytes32 candidateId,uint8 support,string comment,bytes32 parentCommentUID"
 
 const candidateSponsorSignatureSchema = "bytes32 candidateVersionUID,bytes32 proposalId,uint256 nonce,uint256 deadline,bytes signature"
+
+// const schema = "bytes32 proposalId, bytes32 originalMessageId, uint8 messageType, string message";
+// const schema = "uint8 tokenType, address token, bool isCollection, uint256 tokenId";
+// const schema = "address daoMultiSig";
 
 
 const run = async (chain: Chain, schema: string) => {
@@ -55,7 +59,7 @@ const run = async (chain: Chain, schema: string) => {
   if (!schema) {
     throw new Error("Schema not found");
   }
-  const rpc = chain.rpcUrls.default.http[0];
+  const rpc = chain.rpcUrls?.default?.http[0];
   if (!rpc) {
     throw new Error("RPC URL not found for " + chain.name);
   }
@@ -70,9 +74,6 @@ const run = async (chain: Chain, schema: string) => {
 
   schemaRegistry.connect(wallet);
 
-  //const schema = "bytes32 proposalId, bytes32 originalMessageId, uint8 messageType, string message";
-  // const schema = "uint8 tokenType, address token, bool isCollection, uint256 tokenId";
-  //const schema = "address daoMultiSig";
   const resolverAddress = zeroAddress;
   const revocable = true;
 
@@ -98,8 +99,8 @@ const run = async (chain: Chain, schema: string) => {
 const main = async () => {
   const chains = [sepolia];
   const schemas = [
-    // proposalCandidateSchema,
-    // candidateCommentSchema,
+    proposalCandidateSchema,
+    candidateCommentSchema,
     candidateSponsorSignatureSchema,
   ];
   for (const chain of chains) {
