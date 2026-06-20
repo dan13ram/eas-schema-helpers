@@ -2,7 +2,15 @@ import { SchemaRegistry } from "@ethereum-attestation-service/eas-sdk";
 import { ethers } from "ethers";
 import dotenv from "dotenv";
 import { Chain, Hex, zeroAddress } from "viem";
-import { base, optimism, mainnet, arbitrum, sepolia, baseSepolia, optimismSepolia } from "viem/chains";
+import {
+  base,
+  optimism,
+  mainnet,
+  arbitrum,
+  sepolia,
+  baseSepolia,
+  optimismSepolia,
+} from "viem/chains";
 
 dotenv.config();
 
@@ -32,25 +40,33 @@ const getChainLabel = (chain: Chain) => {
   }
 };
 
-const readSchemaRegistryContractAddress = async (chain: Chain): Promise<Hex> => {
-  const { address } = await import("@ethereum-attestation-service/eas-contracts/deployments/" + getChainLabel(chain) + "/SchemaRegistry.json");
+const readSchemaRegistryContractAddress = async (
+  chain: Chain,
+): Promise<Hex> => {
+  const { address } = await import(
+    "@ethereum-attestation-service/eas-contracts/deployments/" +
+    getChainLabel(chain) +
+    "/SchemaRegistry.json"
+  );
   if (!address) {
-    throw new Error("Schema registry contract address not found for " + chain.name);
+    throw new Error(
+      "Schema registry contract address not found for " + chain.name,
+    );
   }
   return address as Hex;
 };
 
+const proposalCandidateSchema = `bytes32 candidateId,bytes32 salt,address[] targets,uint256[] values,bytes[] calldatas,string description`;
 
-const proposalCandidateSchema = "bytes32 candidateId,bytes32 salt,uint64 versionNumber,address[] targets,uint256[] values,bytes[] calldatas,string description,bytes32 proposalId"
+const candidateCommentSchema =
+  "bytes32 candidateId,uint8 support,string comment,bytes32 parentCommentUID";
 
-const candidateCommentSchema = "bytes32 candidateId,uint8 support,string comment,bytes32 parentCommentUID"
-
-const candidateSponsorSignatureSchema = "bytes32 candidateVersionUID,bytes32 proposalId,uint256 nonce,uint256 deadline,bytes signature"
+const candidateSponsorSignatureSchema =
+  "bytes32 candidateId,bytes32 proposalId,uint256 nonce,uint256 deadline,bytes signature";
 
 // const schema = "bytes32 proposalId, bytes32 originalMessageId, uint8 messageType, string message";
 // const schema = "uint8 tokenType, address token, bool isCollection, uint256 tokenId";
 // const schema = "address daoMultiSig";
-
 
 const run = async (chain: Chain, schema: string) => {
   if (!chain || !chain.id) {
@@ -59,7 +75,10 @@ const run = async (chain: Chain, schema: string) => {
   if (!schema) {
     throw new Error("Schema not found");
   }
-  const rpc = chain.rpcUrls?.default?.http[0];
+  const rpc =
+    // chain.id === optimismSepolia.id
+    //   ? process.env.OPTIMISM_SEPOLIA_RPC_URL
+    chain.rpcUrls?.default?.http[0];
   if (!rpc) {
     throw new Error("RPC URL not found for " + chain.name);
   }
@@ -69,7 +88,8 @@ const run = async (chain: Chain, schema: string) => {
   const provider = new ethers.JsonRpcProvider(rpc);
   const wallet = ethers.Wallet.fromPhrase(mnemonic, provider);
 
-  const schemaRegistryContractAddress = await readSchemaRegistryContractAddress(chain);
+  const schemaRegistryContractAddress =
+    await readSchemaRegistryContractAddress(chain);
   const schemaRegistry = new SchemaRegistry(schemaRegistryContractAddress);
 
   schemaRegistry.connect(wallet);
@@ -78,11 +98,14 @@ const run = async (chain: Chain, schema: string) => {
   const revocable = true;
 
   try {
-    const transaction = await schemaRegistry.register({
-      schema,
-      resolverAddress,
-      revocable,
-    });
+    const transaction = await schemaRegistry.register(
+      {
+        schema,
+        resolverAddress,
+        revocable,
+      },
+      { gasLimit: 1_000_000n },
+    );
 
     // Optional: Wait for transaction to be validated
     const hash = await transaction.wait(2);
@@ -93,14 +116,13 @@ const run = async (chain: Chain, schema: string) => {
     console.error("Error registering schema on chain " + chain.name);
     console.error(error);
   }
-}
-
+};
 
 const main = async () => {
-  const chains = [sepolia];
+  const chains = [sepolia, baseSepolia, optimismSepolia];
   const schemas = [
-    proposalCandidateSchema,
-    candidateCommentSchema,
+    // proposalCandidateSchema,
+    // candidateCommentSchema,
     candidateSponsorSignatureSchema,
   ];
   for (const chain of chains) {
@@ -108,6 +130,6 @@ const main = async () => {
       await run(chain, schema);
     }
   }
-}
+};
 
 main();
