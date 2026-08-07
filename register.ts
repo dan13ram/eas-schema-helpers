@@ -114,6 +114,19 @@ const run = async (chain: Chain, schema: string) => {
 
   const resolverAddress = zeroAddress;
   const revocable = true;
+  const schemaUID = SchemaRegistry.getSchemaUID(schema, resolverAddress, revocable);
+  console.log("Estimated schema UID:", schemaUID);
+
+  try {
+    const existingSchema = await schemaRegistry.getSchema({ uid: schemaUID });
+    console.log("Schema already registered on chain " + chain.name);
+    console.log("Schema UID:", existingSchema.uid);
+    return;
+  } catch (error) {
+    if (!(error instanceof Error) || error.message !== "Schema not found") {
+      throw error;
+    }
+  }
 
   try {
     const transaction = await schemaRegistry.register(
@@ -125,8 +138,7 @@ const run = async (chain: Chain, schema: string) => {
       { gasLimit: 1_000_000n },
     );
 
-    // Optional: Wait for transaction to be validated
-    const hash = await transaction.wait(2);
+    const hash = await transaction.wait(1);
 
     console.log("Schema registered on chain " + chain.name);
     console.log("Schema ID:", hash);
