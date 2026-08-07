@@ -40,6 +40,27 @@ const getChainLabel = (chain: Chain) => {
   }
 };
 
+const getChainRPC = (chain: Chain): string | undefined => {
+  switch (chain.id) {
+    case mainnet.id:
+      return process.env.MAINNET_RPC_URL;
+    case optimism.id:
+      return process.env.OPTIMISM_RPC_URL;
+    case arbitrum.id:
+      return process.env.ARBITRUM_RPC_URL;
+    case base.id:
+      return process.env.BASE_RPC_URL;
+    case sepolia.id:
+      return process.env.SEPOLIA_RPC_URL;
+    case optimismSepolia.id:
+      return process.env.OPTIMISM_SEPOLIA_RPC_URL;
+    case baseSepolia.id:
+      return process.env.BASE_SEPOLIA_RPC_URL;
+    default:
+      throw new Error("Unknown chain ID: " + chain.id);
+  }
+}
+
 const readSchemaRegistryContractAddress = async (
   chain: Chain,
 ): Promise<Hex> => {
@@ -75,10 +96,7 @@ const run = async (chain: Chain, schema: string) => {
   if (!schema) {
     throw new Error("Schema not found");
   }
-  const rpc =
-    // chain.id === optimismSepolia.id
-    //   ? process.env.OPTIMISM_SEPOLIA_RPC_URL
-    chain.rpcUrls?.default?.http[0];
+  const rpc = getChainRPC(chain);
   if (!rpc) {
     throw new Error("RPC URL not found for " + chain.name);
   }
@@ -119,10 +137,10 @@ const run = async (chain: Chain, schema: string) => {
 };
 
 const main = async () => {
-  const chains = [sepolia, baseSepolia, optimismSepolia];
+  const chains = [sepolia, baseSepolia, optimismSepolia, base, optimism, mainnet];
   const schemas = [
-    // proposalCandidateSchema,
-    // candidateCommentSchema,
+    proposalCandidateSchema,
+    candidateCommentSchema,
     candidateSponsorSignatureSchema,
   ];
   for (const chain of chains) {
